@@ -1,0 +1,43 @@
+{
+  "id": "com.hp28.imagecaptionsync",
+  "name": "Image Caption Sync",
+  "version": "1.0.0",
+  "main": "index.html",
+  "manifestVersion": 5,
+  "host": [
+    {
+      "app": "PPRO",
+      "minVersion": "22.0.0"
+    }
+  ],
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "imageCaptionSyncPanel",
+      "label": {
+        "default": "Image Caption Sync"
+      },
+      "minimumSize": {
+        "width": 300,
+        "height": 400
+      },
+      "maximumSize": {
+        "width": 800,
+        "height": 1200
+      },
+      "preferredDockedSize": {
+        "width": 400,
+        "height": 600
+      },
+      "preferredFloatingSize": {
+        "width": 400,
+        "height": 600
+      }
+    }
+  ],
+  "requiredPermissions": [
+    "webview",
+    "launchProcess",
+    "network"
+  ]
+}

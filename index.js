@@ -1,7 +1,4 @@
-/* global CSInterface */
-
-// Initialize CEP interface
-const csInterface = new CSInterface();
+// UXP Script for Premiere Pro - Image Caption Sync
 
 // DOM elements
 let analyzeBtn, syncBtn, logContent;
@@ -52,7 +49,7 @@ function log(message, type = 'info') {
 function extractCaptionNumber(captionText) {
     const match = captionText.match(/^(\d+)\./);
     if (match) {
-        return match[1]; // Returns full number as string
+        return match[1];
     }
     return null;
 }
@@ -86,7 +83,7 @@ function matchCaptionsWithImages(captions, images) {
     const usedImages = new Set();
 
     captions.forEach(caption => {
-        const captionNum = extractCaptionNumber(caption.text);
+        const captionNum = extractCaptionNumber(caption.name);
 
         if (!captionNum) {
             unmatchedCaptions.push({
@@ -141,46 +138,121 @@ function matchCaptionsWithImages(captions, images) {
     };
 }
 
-function analyzeTimeline() {
+/**
+ * Get timeline data from Premiere Pro
+ */
+async function getTimelineData() {
+    try {
+        const app = window.require('premierepro');
+
+        if (!app || !app.project) {
+            throw new Error('Không thể truy cập Premiere Pro API');
+        }
+
+        const activeSequence = app.project.activeSequence;
+
+        if (!activeSequence) {
+            throw new Error('Không có sequence nào đang được mở. Vui lòng mở một sequence.');
+        }
+
+        const captions = [];
+        const images = [];
+
+        // Get all video tracks
+        const videoTracks = activeSequence.videoTracks;
+
+        for (let trackIndex = 0; trackIndex < videoTracks.numTracks; trackIndex++) {
+            const track = videoTracks[trackIndex];
+            const clips = track.clips;
+
+            for (let clipIndex = 0; clipIndex < clips.numItems; clipIndex++) {
+                const clip = clips[clipIndex];
+                const clipName = clip.name;
+
+                // Get project item
+                const projectItem = clip.projectItem;
+                if (!projectItem) continue;
+
+                // Get timing info
+                const startTime = clip.start.seconds;
+                const endTime = clip.end.seconds;
+
+                // Generate unique ID for clip
+                const clipId = `${trackIndex}_${clipIndex}_${clipName}_${startTime}`;
+
+                // Determine if it's a caption or image based on name pattern
+                const isCaptionByName = /^\d+\./.test(clipName);
+
+                // Check if it's an image file
+                const mediaPath = projectItem.getMediaPath ? projectItem.getMediaPath() : '';
+                const isImage = /\.(png|jpg|jpeg|bmp|tiff|gif|psd)$/i.test(mediaPath) ||
+                               /\.(png|jpg|jpeg|bmp|tiff|gif|psd)$/i.test(clipName);
+
+                const clipData = {
+                    id: clipId,
+                    name: clipName,
+                    trackIndex: trackIndex,
+                    clipIndex: clipIndex,
+                    startTime: startTime,
+                    endTime: endTime,
+                    duration: endTime - startTime,
+                    clip: clip // Store reference to actual clip
+                };
+
+                if (isCaptionByName) {
+                    captions.push(clipData);
+                } else if (isImage) {
+                    images.push(clipData);
+                }
+            }
+        }
+
+        return {
+            captions,
+            images,
+            sequenceName: activeSequence.name
+        };
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * Analyze timeline
+ */
+async function analyzeTimeline() {
     log('Đang phân tích timeline...', 'info');
     analyzeBtn.disabled = true;
 
-    // Call ExtendScript to get timeline data
-    csInterface.evalScript('getTimelineData()', function(result) {
-        try {
-            const data = JSON.parse(result);
+    try {
+        const data = await getTimelineData();
 
-            if (data.error) {
-                log(`Lỗi: ${data.error}`, 'error');
-                analyzeBtn.disabled = false;
-                return;
-            }
+        log(`Tìm thấy ${data.captions.length} caption và ${data.images.length} ảnh`, 'success');
 
-            log(`Tìm thấy ${data.captions.length} caption và ${data.images.length} ảnh`, 'success');
+        // Match captions with images
+        const matchResult = matchCaptionsWithImages(data.captions, data.images);
 
-            // Match captions with images
-            const matchResult = matchCaptionsWithImages(data.captions, data.images);
+        // Store for later use
+        analysisData = {
+            ...data,
+            matchResult
+        };
 
-            // Store for later use
-            analysisData = {
-                ...data,
-                matchResult
-            };
+        // Update UI
+        displayAnalysisResults(matchResult, data.captions.length, data.images.length);
 
-            // Update UI
-            displayAnalysisResults(matchResult, data.captions.length, data.images.length);
+        // Enable sync button if there are matches
+        syncBtn.disabled = matchResult.matches.length === 0;
 
-            // Enable sync button if there are matches
-            syncBtn.disabled = matchResult.matches.length === 0;
+        log(`Phân tích hoàn tất: ${matchResult.matches.length} cặp có thể đồng bộ`, 'success');
 
-            log(`Phân tích hoàn tất: ${matchResult.matches.length} cặp có thể đồng bộ`, 'success');
+    } catch (error) {
+        log(`Lỗi: ${error.message}`, 'error');
+        console.error(error);
+    }
 
-        } catch (error) {
-            log(`Lỗi parse dữ liệu: ${error.message}`, 'error');
-        }
-
-        analyzeBtn.disabled = false;
-    });
+    analyzeBtn.disabled = false;
 }
 
 function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount) {
@@ -201,7 +273,7 @@ function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount)
         const div = document.createElement('div');
         div.className = 'match-item';
         div.innerHTML = `
-            <div class="caption-text">📝 Caption: "${match.caption.text}" (số: ${match.matchNumber})</div>
+            <div class="caption-text">📝 Caption: "${match.caption.name}" (số: ${match.matchNumber})</div>
             <div class="image-text">🖼️ Ảnh: ${match.image.name}</div>
         `;
         matchList.appendChild(div);
@@ -212,7 +284,7 @@ function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount)
         const div = document.createElement('div');
         div.className = 'match-item unmatched';
         const icon = item.type === 'caption' ? '📝' : '🖼️';
-        const name = item.type === 'caption' ? item.item.text : item.item.name;
+        const name = item.item.name;
         div.innerHTML = `
             <div class="caption-text">${icon} ${name}</div>
             <div class="no-match">❌ ${item.reason}</div>
@@ -223,7 +295,10 @@ function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount)
     matchingResults.style.display = 'block';
 }
 
-function syncTimeline() {
+/**
+ * Sync timeline - move images to match caption timing
+ */
+async function syncTimeline() {
     if (!analysisData || !analysisData.matchResult) {
         log('Chưa có dữ liệu phân tích. Vui lòng nhấn "Phân tích Timeline" trước.', 'error');
         return;
@@ -238,36 +313,41 @@ function syncTimeline() {
     log(`Bắt đầu đồng bộ ${matches.length} cặp...`, 'info');
     syncBtn.disabled = true;
 
-    // Prepare data for ExtendScript
-    const syncData = matches.map(match => ({
-        captionId: match.caption.id,
-        imageId: match.image.id,
-        captionInPoint: match.caption.inPoint,
-        captionOutPoint: match.caption.outPoint
-    }));
+    try {
+        let syncedCount = 0;
 
-    // Call ExtendScript to perform sync
-    csInterface.evalScript(`syncClips(${JSON.stringify(syncData)})`, function(result) {
-        try {
-            const response = JSON.parse(result);
+        for (const match of matches) {
+            try {
+                const captionClip = match.caption.clip;
+                const imageClip = match.image.clip;
 
-            if (response.error) {
-                log(`Lỗi đồng bộ: ${response.error}`, 'error');
-            } else {
-                log(`Đồng bộ thành công ${response.synced} cặp!`, 'success');
+                // Get caption timing
+                const captionStart = captionClip.start.seconds;
 
-                // Reset analysis data
-                analysisData = null;
-                syncBtn.disabled = true;
+                // Move image to align with caption start
+                imageClip.start.seconds = captionStart;
 
-                // Clear display
-                statusSection.style.display = 'none';
-                matchingResults.style.display = 'none';
+                syncedCount++;
+
+            } catch (error) {
+                log(`Lỗi đồng bộ cặp ${match.caption.name} - ${match.image.name}: ${error.message}`, 'error');
             }
-        } catch (error) {
-            log(`Lỗi xử lý kết quả: ${error.message}`, 'error');
         }
 
-        syncBtn.disabled = false;
-    });
+        log(`Đồng bộ thành công ${syncedCount}/${matches.length} cặp!`, 'success');
+
+        // Reset analysis data
+        analysisData = null;
+        syncBtn.disabled = true;
+
+        // Clear display
+        statusSection.style.display = 'none';
+        matchingResults.style.display = 'none';
+
+    } catch (error) {
+        log(`Lỗi đồng bộ: ${error.message}`, 'error');
+        console.error(error);
+    }
+
+    syncBtn.disabled = false;
 }

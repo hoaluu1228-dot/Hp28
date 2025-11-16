@@ -1,8 +1,8 @@
 {
-  "name": "image-caption-sync",
+  "name": "image-caption-sync-uxp",
   "version": "1.0.0",
-  "description": "CEP Extension for Adobe Premiere Pro to sync images and captions based on number matching",
-  "main": "client/main.js",
+  "description": "UXP Extension for Adobe Premiere Pro to sync images and captions based on number matching",
+  "main": "index.js",
   "author": "HP28",
   "license": "MIT",
   "repository": {
@@ -12,12 +12,18 @@
   "keywords": [
     "adobe",
     "premiere-pro",
-    "cep",
+    "uxp",
     "extension",
     "caption",
-    "sync"
+    "sync",
+    "image",
+    "automation"
   ],
   "engines": {
-    "premiere-pro": ">=13.0.0"
+    "premiere-pro": ">=22.0.0"
+  },
+  "uxp": {
+    "manifestVersion": 5,
+    "host": "PPRO"
   }
 }

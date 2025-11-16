@@ -1,182 +1,270 @@
-# Hướng dẫn cài đặt chi tiết
+# Hướng dẫn cài đặt chi tiết - UXP Extension
 
-## 1. Xác định thư mục cài đặt
+## Yêu cầu
 
-### Windows
-Thư mục extensions của CEP thường nằm ở:
-```
-C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\
-```
+- Adobe Premiere Pro CC 2022 hoặc mới hơn (version 22.0.0+)
+- Windows 10/11 hoặc macOS 10.15+
+- UXP Developer Tool (cho development/testing)
 
-Nếu không tồn tại, bạn có thể tạo thủ công.
+## Phương pháp cài đặt
 
-### macOS
-```
-/Library/Application Support/Adobe/CEP/extensions/
-```
+### Phương pháp 1: Sử dụng UXP Developer Tool (Recommended)
 
-Hoặc thư mục user-specific:
-```
-~/Library/Application Support/Adobe/CEP/extensions/
-```
+Đây là cách dễ nhất và phù hợp cho development.
 
-## 2. Copy extension
+#### Bước 1: Tải và cài đặt UXP Developer Tool
 
-1. Tạo thư mục mới tên `ImageCaptionSync` trong thư mục extensions
-2. Copy toàn bộ nội dung của project vào thư mục đó
+1. Truy cập: https://developer.adobe.com/photoshop/uxp/devtool/
+2. Tải phiên bản phù hợp với hệ điều hành của bạn
+3. Cài đặt UXP Developer Tool (UDT)
 
-Cấu trúc sau khi copy:
-```
-extensions/
-└── ImageCaptionSync/
-    ├── CSXS/
-    ├── client/
-    ├── host/
-    ├── .debug
-    └── package.json
-```
+#### Bước 2: Mở UXP Developer Tool
 
-## 3. Enable Debug Mode
+1. Launch UXP Developer Tool
+2. Bạn sẽ thấy danh sách các Adobe apps đang chạy
 
-### Windows - Sử dụng Registry
+#### Bước 3: Load Extension
 
-1. Nhấn `Win + R`, gõ `regedit` và Enter
-2. Navigate đến: `HKEY_CURRENT_USER\Software\Adobe`
-3. Tìm hoặc tạo key `CSXS.9` (hoặc version tương ứng)
-4. Click phải > New > String Value
-5. Đặt tên: `PlayerDebugMode`
-6. Double click và set value: `1`
+1. Click nút **"Add Plugin..."** ở góc trên
+2. Browse đến thư mục chứa extension này (thư mục có file `manifest.json`)
+3. Click **"Select Folder"**
+4. Extension sẽ xuất hiện trong danh sách
 
-### Windows - Sử dụng file .reg
+#### Bước 4: Load vào Premiere Pro
 
-Tạo file `enable-debug.reg`:
+1. Đảm bảo Premiere Pro đang chạy
+2. Trong UDT, tìm extension "Image Caption Sync"
+3. Click nút **"..."** (More Actions)
+4. Chọn **"Load"**
+5. Extension sẽ được load vào Premiere Pro
 
-```reg
-Windows Registry Editor Version 5.00
+#### Bước 5: Mở Panel
 
-[HKEY_CURRENT_USER\Software\Adobe\CSXS.9]
-"PlayerDebugMode"="1"
+Trong Premiere Pro:
+1. Vào menu `Window > Extensions`
+2. Chọn `Image Caption Sync`
+3. Panel sẽ mở ra
 
-[HKEY_CURRENT_USER\Software\Adobe\CSXS.10]
-"PlayerDebugMode"="1"
+### Phương pháp 2: Cài đặt thủ công (Production Use)
 
-[HKEY_CURRENT_USER\Software\Adobe\CSXS.11]
-"PlayerDebugMode"="1"
-```
+Phù hợp khi bạn muốn extension luôn có sẵn mà không cần UDT.
 
-Double-click để import vào registry.
+#### Windows
 
-### macOS - Sử dụng Terminal
+1. Mở File Explorer
+2. Navigate đến thư mục:
+   ```
+   C:\Program Files\Common Files\Adobe\UXP\PluginsStorage\PPRO\<version>\External\
+   ```
 
-```bash
-# For CC 2019-2020 (CSXS.9)
-defaults write com.adobe.CSXS.9 PlayerDebugMode 1
+   Ví dụ:
+   - Premiere Pro 2022: `.../PPRO/22/External/`
+   - Premiere Pro 2023: `.../PPRO/23/External/`
+   - Premiere Pro 2024: `.../PPRO/24/External/`
 
-# For CC 2021 (CSXS.10)
-defaults write com.adobe.CSXS.10 PlayerDebugMode 1
+3. Nếu thư mục không tồn tại, tạo thủ công
 
-# For CC 2022+ (CSXS.11)
-defaults write com.adobe.CSXS.11 PlayerDebugMode 1
-```
+4. Copy toàn bộ thư mục extension vào đây
 
-## 4. Xác định phiên bản CSXS
+   Cấu trúc sau khi copy:
+   ```
+   External/
+   └── ImageCaptionSync/
+       ├── manifest.json
+       ├── index.html
+       ├── index.js
+       ├── styles.css
+       └── icons/
+   ```
 
-Tùy thuộc vào phiên bản Premiere Pro:
+5. Restart Premiere Pro
 
-| Premiere Pro Version | CSXS Version |
-|---------------------|--------------|
-| CC 2017 | CSXS.7 |
-| CC 2018 | CSXS.8 |
-| CC 2019 | CSXS.9 |
-| CC 2020 | CSXS.9 |
-| CC 2021 | CSXS.10 |
-| CC 2022 | CSXS.11 |
-| CC 2023+ | CSXS.11 |
+#### macOS
 
-## 5. Kiểm tra Extension
+1. Mở Finder
+2. Nhấn `Cmd + Shift + G` để Go to Folder
+3. Paste đường dẫn:
+   ```
+   /Library/Application Support/Adobe/UXP/PluginsStorage/PPRO/<version>/External/
+   ```
 
-1. Khởi động lại Premiere Pro
-2. Vào `Window > Extensions`
-3. Bạn sẽ thấy `Image Caption Sync` trong danh sách
-4. Click để mở panel
+   Ví dụ:
+   - Premiere Pro 2022: `.../PPRO/22/External/`
+   - Premiere Pro 2023: `.../PPRO/23/External/`
 
-## 6. Debug (nếu có lỗi)
+4. Nếu thư mục không tồn tại, tạo thủ công (có thể cần quyền admin)
 
-### Mở Chrome DevTools
+5. Copy toàn bộ thư mục extension vào đây
 
-Khi extension đang mở trong Premiere Pro:
+6. Restart Premiere Pro
 
-**Windows/Linux:**
-- Nhấn `Ctrl + Alt + I`
+### Phương pháp 3: Package thành .ccx và cài đặt
+
+Phù hợp để distribute cho người khác.
+
+#### Bước 1: Package Extension
+
+1. Mở UXP Developer Tool
+2. Load extension như Phương pháp 1
+3. Click nút **"..."** (More Actions) bên cạnh extension
+4. Chọn **"Package"**
+5. Chọn nơi lưu file .ccx
+6. UDT sẽ tạo file .ccx
+
+#### Bước 2: Cài đặt file .ccx
+
+**Windows:**
+1. Double-click file .ccx
+2. Windows sẽ mở Adobe Extension Manager hoặc cài đặt tự động
+3. Follow hướng dẫn trên màn hình
 
 **macOS:**
-- Nhấn `Cmd + Opt + I`
+1. Double-click file .ccx
+2. macOS sẽ mở Adobe Extension Manager hoặc cài đặt tự động
+3. Follow hướng dẫn trên màn hình
 
-DevTools sẽ mở và bạn có thể xem Console để debug JavaScript errors.
+## Kiểm tra cài đặt thành công
 
-### Kiểm tra ExtendScript Toolkit
+1. Mở Premiere Pro
+2. Vào menu `Window > Extensions`
+3. Bạn sẽ thấy `Image Caption Sync` trong danh sách
+4. Click để mở panel
+5. Panel sẽ hiển thị UI với nút "Phân tích Timeline" và "Đồng bộ"
 
-Để debug phần ExtendScript (host-side):
+## Debug và Development
 
-1. Download và cài đặt ExtendScript Toolkit
-2. Mở file `host/index.jsx`
-3. Chọn target application là Premiere Pro
-4. Set breakpoints và debug
+### Bật Chrome DevTools
 
-## 7. Xử lý lỗi thường gặp
+Khi extension đang chạy trong Premiere Pro qua UDT:
 
-### Extension không hiển thị trong menu
+1. Trong UXP Developer Tool
+2. Tìm extension "Image Caption Sync" trong danh sách
+3. Click nút **"Debug"**
+4. Chrome DevTools sẽ mở
+5. Bạn có thể xem Console, inspect elements, debug JavaScript
+
+### Reload Extension sau khi chỉnh sửa code
+
+1. Chỉnh sửa code trong editor của bạn
+2. Save files
+3. Trong UDT, click **"Reload"** hoặc **"Watch"** để auto-reload
+4. Extension sẽ reload với code mới
+5. **Không cần restart Premiere Pro**
+
+### Watch Mode (Auto-reload)
+
+1. Trong UDT, click nút **"..."** bên cạnh extension
+2. Enable **"Watch"**
+3. Mỗi khi bạn save file, extension sẽ tự động reload
+
+## Troubleshooting
+
+### Extension không xuất hiện trong menu
 
 **Nguyên nhân:**
-- Debug mode chưa được enable
-- Extension không được copy đúng vị trí
-- Manifest.xml có lỗi cấu hình
+- Premiere Pro version < 22.0.0
+- Extension không được load đúng cách
+- Manifest.json có lỗi
 
 **Giải pháp:**
-1. Kiểm tra lại debug mode
-2. Xác nhận cấu trúc thư mục
-3. Kiểm tra file manifest.xml không có lỗi syntax
+1. Kiểm tra phiên bản Premiere Pro: `Help > About Adobe Premiere Pro`
+2. Trong UDT, kiểm tra xem có error messages không
+3. Click "Reload" trong UDT
+4. Restart Premiere Pro
 
-### Extension hiển thị nhưng không load
+### Extension load nhưng UI không hiển thị
 
 **Nguyên nhân:**
-- File CSInterface.js bị thiếu
-- Lỗi trong JavaScript code
+- Lỗi trong HTML/CSS
+- File path không đúng
 
 **Giải pháp:**
 1. Mở DevTools và kiểm tra Console
-2. Đảm bảo file `client/lib/CSInterface.js` tồn tại
-3. Kiểm tra lỗi JavaScript trong Console
+2. Kiểm tra file `index.html` có tồn tại không
+3. Kiểm tra đường dẫn trong manifest.json
 
-### Extension load nhưng không tương tác được với Premiere
+### Lỗi khi phân tích timeline
 
 **Nguyên nhân:**
-- Lỗi trong ExtendScript code
-- Không có sequence đang active
+- Không có sequence active
+- Lỗi trong JavaScript code
+- Không có quyền truy cập API
 
 **Giải pháp:**
-1. Mở một sequence trong Premiere Pro
-2. Kiểm tra file `host/index.jsx`
-3. Xem log trong extension UI
+1. Đảm bảo đã mở một sequence trong Premiere Pro
+2. Mở DevTools và xem Console errors
+3. Kiểm tra manifest.json có đủ permissions không
 
-## 8. Update Extension
+### Extension bị crash
 
-Khi cần update extension:
+**Giải pháp:**
+1. Mở DevTools trước để xem lỗi
+2. Reload extension trong UDT
+3. Nếu vẫn bị, restart Premiere Pro
 
-1. Đóng Premiere Pro
-2. Thay thế các file trong thư mục extension
-3. Khởi động lại Premiere Pro
-4. Extension sẽ tự động reload với code mới
+## Uninstall Extension
 
-## 9. Gỡ cài đặt
+### Nếu cài qua UDT:
 
-1. Đóng Premiere Pro
-2. Xóa thư mục `ImageCaptionSync` khỏi thư mục extensions
-3. (Optional) Xóa registry key hoặc defaults nếu muốn disable debug mode
+1. Mở UXP Developer Tool
+2. Tìm extension trong danh sách
+3. Click **"..."** > **"Remove"**
+4. Restart Premiere Pro
+
+### Nếu cài thủ công:
+
+1. Xóa thư mục extension khỏi:
+   - Windows: `C:\Program Files\Common Files\Adobe\UXP\PluginsStorage\PPRO\<version>\External\ImageCaptionSync\`
+   - macOS: `/Library/Application Support/Adobe/UXP/PluginsStorage/PPRO/<version>/External/ImageCaptionSync/`
+
+2. Restart Premiere Pro
+
+### Nếu cài qua .ccx:
+
+1. Sử dụng Adobe Extension Manager để uninstall
+2. Hoặc xóa thủ công như trên
+
+## Tips cho Development
+
+### 1. Sử dụng Console.log
+
+Trong `index.js`, thêm:
+```javascript
+console.log('Debug message:', data);
+```
+
+Xem output trong Chrome DevTools.
+
+### 2. Kiểm tra Manifest
+
+Nếu thay đổi `manifest.json`, bạn cần:
+1. Reload extension trong UDT
+2. Hoặc restart Premiere Pro
+
+### 3. Hot Reload
+
+Enable Watch mode trong UDT để tự động reload khi save files.
+
+### 4. Test với nhiều sequences
+
+Test extension với:
+- Sequence rỗng
+- Sequence có nhiều tracks
+- Sequence với tên file đặc biệt
+
+## Resources
+
+- UXP Documentation: https://developer.adobe.com/photoshop/uxp/
+- Premiere Pro API: https://ppro-scripting.docsforadobe.dev/
+- UXP Developer Forum: https://forums.creativeclouddeveloper.com/
 
 ## Liên hệ hỗ trợ
 
-Nếu gặp vấn đề, vui lòng:
+Nếu gặp vấn đề:
 1. Kiểm tra Console trong DevTools
-2. Kiểm tra log trong UI của extension
-3. Tạo issue trên GitHub với thông tin chi tiết về lỗi
+2. Kiểm tra log trong UDT
+3. Tạo issue trên GitHub với:
+   - Premiere Pro version
+   - OS version
+   - Error messages
+   - Screenshots
