@@ -7,8 +7,7 @@
   "host": [
     {
       "app": "PPRO",
-      "minVersion": "22.0.0",
-      "maxVersion": "99.9"
+      "minVersion": "22.0"
     }
   ],
   "entrypoints": [
