@@ -10,7 +10,7 @@ Extension UXP cho Adobe Premiere Pro để tự động đồng bộ hóa thời
 - 📊 **Báo cáo chi tiết**: Hiển thị số lượng cặp matched và unmatched
 - 🎨 **UXP Modern**: Sử dụng UXP platform mới nhất của Adobe
 
-## Quy tắc matching
+## Quy tắc matching và đồng bộ
 
 Extension sẽ match caption và ảnh dựa trên quy tắc sau:
 
@@ -25,6 +25,30 @@ Extension sẽ match caption và ảnh dựa trên quy tắc sau:
 | `002. In 1770` | `02` | `102.png` | `02` | ✅ Match |
 | `015. The story` | `15` | `img_015.jpg` | `15` | ✅ Match |
 | `003. Example` | `03` | `204.png` | `04` | ❌ Không match |
+
+### Logic đồng bộ (Nối liền mạch):
+
+Khi đồng bộ, ảnh sẽ được **nối liền mạch** ngay sau caption tương ứng:
+
+```
+Timeline trước đồng bộ:
+├── Caption 001: [0s -------- 5s]
+├── Caption 002: [5s -------- 10s]
+├── Image 101: [20s --- 23s]      ← Vị trí ngẫu nhiên
+└── Image 102: [30s --- 33s]      ← Vị trí ngẫu nhiên
+
+Timeline sau đồng bộ:
+├── Caption 001: [0s -------- 5s]
+├── Image 101: [5s --- 8s]         ← Nối liền sau Caption 001
+├── Caption 002: [5s -------- 10s]
+└── Image 102: [10s --- 13s]       ← Nối liền sau Caption 002
+```
+
+**Logic:**
+1. Tìm caption và ảnh matching (dựa trên số)
+2. Sắp xếp theo thứ tự số caption (001, 002, 003...)
+3. Di chuyển ảnh để `Image.start = Caption.end`
+4. Giữ nguyên duration của ảnh
 
 ## Yêu cầu hệ thống
 
@@ -61,12 +85,36 @@ C:\Program Files\Common Files\Adobe\UXP\PluginsStorage\PPRO\<version>\External\
 
 Copy toàn bộ thư mục extension vào đây và restart Premiere Pro.
 
-### Phương pháp 3: Package thành .ccx
+### Phương pháp 3: Package thành .ccx (Distribution)
 
-1. Sử dụng UXP Developer Tool để package extension
-2. Click "Package" trong UDT
-3. Tạo file .ccx
-4. Double-click file .ccx để cài đặt
+**CCX** (Creative Cloud Extension) là file package để distribute UXP extension.
+
+#### Tạo file CCX:
+
+1. Mở UXP Developer Tool
+2. Load extension như Phương pháp 1
+3. Click nút **"..."** (More Actions) bên cạnh extension
+4. Chọn **"Package"**
+5. Chọn thư mục output
+6. UDT sẽ tạo file `.ccx`
+
+#### Cài đặt từ file CCX:
+
+**Cách 1: Double-click (Recommended)**
+- Windows/macOS: Double-click file `.ccx`
+- Hệ thống sẽ tự động mở Adobe Extension Manager
+- Follow hướng dẫn để cài đặt
+
+**Cách 2: Adobe Creative Cloud Desktop**
+- Mở Creative Cloud Desktop App
+- Vào tab "Stock & Marketplace" > "Manage"
+- Kéo thả file `.ccx` vào
+- Extension sẽ được cài đặt tự động
+
+**Lưu ý:**
+- File CCX có thể share cho người khác
+- Không cần UXP Developer Tool để cài đặt CCX
+- CCX phù hợp cho end-users
 
 ## Sử dụng
 

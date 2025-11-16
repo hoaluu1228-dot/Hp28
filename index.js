@@ -296,7 +296,8 @@ function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount)
 }
 
 /**
- * Sync timeline - move images to match caption timing
+ * Sync timeline - move images to connect seamlessly after captions
+ * Logic: Caption -> Image (nối liền mạch)
  */
 async function syncTimeline() {
     if (!analysisData || !analysisData.matchResult) {
@@ -311,30 +312,46 @@ async function syncTimeline() {
     }
 
     log(`Bắt đầu đồng bộ ${matches.length} cặp...`, 'info');
+    log('Logic: Ảnh sẽ nối liền mạch ngay sau Caption tương ứng', 'info');
     syncBtn.disabled = true;
 
     try {
+        // Sort matches by caption number to maintain order
+        const sortedMatches = matches.sort((a, b) => {
+            const numA = parseInt(extractCaptionNumber(a.caption.name));
+            const numB = parseInt(extractCaptionNumber(b.caption.name));
+            return numA - numB;
+        });
+
         let syncedCount = 0;
 
-        for (const match of matches) {
+        for (const match of sortedMatches) {
             try {
                 const captionClip = match.caption.clip;
                 const imageClip = match.image.clip;
 
-                // Get caption timing
-                const captionStart = captionClip.start.seconds;
+                // Get caption end time
+                const captionEndTime = captionClip.end.seconds;
 
-                // Move image to align with caption start
-                imageClip.start.seconds = captionStart;
+                // Get image duration (to preserve it)
+                const imageDuration = imageClip.end.seconds - imageClip.start.seconds;
+
+                // Move image to start right after caption ends (nối liền mạch)
+                imageClip.start.seconds = captionEndTime;
+
+                // Set image end time to maintain its duration
+                imageClip.end.seconds = captionEndTime + imageDuration;
 
                 syncedCount++;
 
+                log(`✓ ${match.caption.name} → ${match.image.name} (nối tại ${captionEndTime.toFixed(2)}s)`, 'success');
+
             } catch (error) {
-                log(`Lỗi đồng bộ cặp ${match.caption.name} - ${match.image.name}: ${error.message}`, 'error');
+                log(`✗ Lỗi đồng bộ ${match.caption.name} - ${match.image.name}: ${error.message}`, 'error');
             }
         }
 
-        log(`Đồng bộ thành công ${syncedCount}/${matches.length} cặp!`, 'success');
+        log(`Hoàn thành! Đã nối liền mạch ${syncedCount}/${matches.length} cặp`, 'success');
 
         // Reset analysis data
         analysisData = null;

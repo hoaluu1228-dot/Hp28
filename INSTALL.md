@@ -100,7 +100,8 @@ Phù hợp khi bạn muốn extension luôn có sẵn mà không cần UDT.
 
 ### Phương pháp 3: Package thành .ccx và cài đặt
 
-Phù hợp để distribute cho người khác.
+**CCX (Creative Cloud Extension)** là file package chuẩn của Adobe để distribute UXP extensions.
+Phù hợp khi muốn share extension cho người khác hoặc cài đặt production version.
 
 #### Bước 1: Package Extension
 
@@ -108,20 +109,50 @@ Phù hợp để distribute cho người khác.
 2. Load extension như Phương pháp 1
 3. Click nút **"..."** (More Actions) bên cạnh extension
 4. Chọn **"Package"**
-5. Chọn nơi lưu file .ccx
-6. UDT sẽ tạo file .ccx
+5. Chọn thư mục output để lưu file
+6. UDT sẽ build và tạo file `.ccx`
+
+**Lưu ý:**
+- File CCX được sign và validate bởi Adobe
+- Có thể distribute qua email, download link, etc.
+- End-users không cần UXP Developer Tool để cài đặt
 
 #### Bước 2: Cài đặt file .ccx
 
+**Cách 1: Double-click (Đơn giản nhất)**
+
 **Windows:**
-1. Double-click file .ccx
-2. Windows sẽ mở Adobe Extension Manager hoặc cài đặt tự động
-3. Follow hướng dẫn trên màn hình
+1. Double-click file `.ccx`
+2. Windows sẽ tự động mở Adobe Extension Manager
+3. Follow hướng dẫn để cài đặt
+4. Extension sẽ có sẵn trong Premiere Pro
 
 **macOS:**
-1. Double-click file .ccx
-2. macOS sẽ mở Adobe Extension Manager hoặc cài đặt tự động
-3. Follow hướng dẫn trên màn hình
+1. Double-click file `.ccx`
+2. macOS sẽ tự động mở Adobe Extension Manager
+3. Follow hướng dẫn để cài đặt
+4. Extension sẽ có sẵn trong Premiere Pro
+
+**Cách 2: Qua Creative Cloud Desktop App**
+
+1. Mở Adobe Creative Cloud Desktop App
+2. Vào tab **"Stock & Marketplace"** hoặc **"Manage"**
+3. Tìm phần Extensions
+4. Kéo thả file `.ccx` vào
+5. Hoặc click "Install from file" và chọn file `.ccx`
+6. Extension sẽ được cài đặt tự động
+
+**Cách 3: Command Line (Advanced)**
+
+**Windows:**
+```cmd
+ExManCmd /install "path/to/extension.ccx"
+```
+
+**macOS:**
+```bash
+/Applications/Adobe\ Extension\ Manager\ CC/Adobe\ Extension\ Manager\ CC.app/Contents/MacOS/ExManCmd --install "path/to/extension.ccx"
+```
 
 ## Kiểm tra cài đặt thành công
 
