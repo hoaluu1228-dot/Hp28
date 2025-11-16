@@ -296,8 +296,8 @@ function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount)
 }
 
 /**
- * Sync timeline - move images to connect seamlessly after captions
- * Logic: Caption -> Image (nối liền mạch)
+ * Sync timeline - match image timing exactly with caption
+ * Logic: Image và Caption có cùng start/end time (khác track)
  */
 async function syncTimeline() {
     if (!analysisData || !analysisData.matchResult) {
@@ -312,7 +312,7 @@ async function syncTimeline() {
     }
 
     log(`Bắt đầu đồng bộ ${matches.length} cặp...`, 'info');
-    log('Logic: Ảnh sẽ nối liền mạch ngay sau Caption tương ứng', 'info');
+    log('Logic: Ảnh sẽ có cùng thời gian với Caption (ở track phía dưới)', 'info');
     syncBtn.disabled = true;
 
     try {
@@ -330,28 +330,24 @@ async function syncTimeline() {
                 const captionClip = match.caption.clip;
                 const imageClip = match.image.clip;
 
-                // Get caption end time
+                // Get caption timing
+                const captionStartTime = captionClip.start.seconds;
                 const captionEndTime = captionClip.end.seconds;
 
-                // Get image duration (to preserve it)
-                const imageDuration = imageClip.end.seconds - imageClip.start.seconds;
-
-                // Move image to start right after caption ends (nối liền mạch)
-                imageClip.start.seconds = captionEndTime;
-
-                // Set image end time to maintain its duration
-                imageClip.end.seconds = captionEndTime + imageDuration;
+                // Sync image to match caption timing exactly
+                imageClip.start.seconds = captionStartTime;
+                imageClip.end.seconds = captionEndTime;
 
                 syncedCount++;
 
-                log(`✓ ${match.caption.name} → ${match.image.name} (nối tại ${captionEndTime.toFixed(2)}s)`, 'success');
+                log(`✓ ${match.caption.name} ↔ ${match.image.name} ([${captionStartTime.toFixed(2)}s - ${captionEndTime.toFixed(2)}s])`, 'success');
 
             } catch (error) {
                 log(`✗ Lỗi đồng bộ ${match.caption.name} - ${match.image.name}: ${error.message}`, 'error');
             }
         }
 
-        log(`Hoàn thành! Đã nối liền mạch ${syncedCount}/${matches.length} cặp`, 'success');
+        log(`Hoàn thành! Đã đồng bộ ${syncedCount}/${matches.length} cặp với cùng thời gian`, 'success');
 
         // Reset analysis data
         analysisData = null;

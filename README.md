@@ -26,29 +26,35 @@ Extension sẽ match caption và ảnh dựa trên quy tắc sau:
 | `015. The story` | `15` | `img_015.jpg` | `15` | ✅ Match |
 | `003. Example` | `03` | `204.png` | `04` | ❌ Không match |
 
-### Logic đồng bộ (Nối liền mạch):
+### Logic đồng bộ (Cùng thời gian):
 
-Khi đồng bộ, ảnh sẽ được **nối liền mạch** ngay sau caption tương ứng:
+Khi đồng bộ, ảnh sẽ có **cùng thời gian** với caption tương ứng (chỉ khác track):
 
 ```
 Timeline trước đồng bộ:
+Track 1 - Captions:
 ├── Caption 001: [0s -------- 5s]
-├── Caption 002: [5s -------- 10s]
+└── Caption 002: [5s ------------- 13s]
+
+Track 2 - Images (chưa sync):
 ├── Image 101: [20s --- 23s]      ← Vị trí ngẫu nhiên
 └── Image 102: [30s --- 33s]      ← Vị trí ngẫu nhiên
 
 Timeline sau đồng bộ:
+Track 1 - Captions:
 ├── Caption 001: [0s -------- 5s]
-├── Image 101: [5s --- 8s]         ← Nối liền sau Caption 001
-├── Caption 002: [5s -------- 10s]
-└── Image 102: [10s --- 13s]       ← Nối liền sau Caption 002
+└── Caption 002: [5s ------------- 13s]
+
+Track 2 - Images (đã sync):
+├── Image 101:   [0s -------- 5s]    ← Cùng thời gian với Caption 001
+└── Image 102:   [5s ------------- 13s]    ← Cùng thời gian với Caption 002
 ```
 
 **Logic:**
 1. Tìm caption và ảnh matching (dựa trên số)
 2. Sắp xếp theo thứ tự số caption (001, 002, 003...)
-3. Di chuyển ảnh để `Image.start = Caption.end`
-4. Giữ nguyên duration của ảnh
+3. Đồng bộ thời gian: `Image.start = Caption.start` và `Image.end = Caption.end`
+4. Kết quả: Caption và Image cùng timing, chỉ khác track (ở dưới)
 
 ## Yêu cầu hệ thống
 
