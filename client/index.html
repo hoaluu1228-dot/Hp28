@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Caption Sync</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Đồng bộ Ảnh & Caption</h1>
+            <p class="subtitle">Tự động đồng bộ thời gian dựa trên số trong caption và tên ảnh</p>
+        </header>
+
+        <div class="instructions">
+            <h3>Hướng dẫn sử dụng:</h3>
+            <ol>
+                <li>Caption phải có format: <code>XXX. Text...</code> (vd: 002. In 1770)</li>
+                <li>Tên ảnh phải có số cuối (vd: 102.png)</li>
+                <li>Hệ thống sẽ match số cuối của caption với số cuối của tên ảnh</li>
+                <li>Ví dụ: <strong>002</strong>. In 1770 → 1<strong>02</strong>.png</li>
+            </ol>
+        </div>
+
+        <div class="controls">
+            <button id="analyzeBtn" class="btn btn-primary">
+                <span class="icon">🔍</span>
+                Phân tích Timeline
+            </button>
+
+            <button id="syncBtn" class="btn btn-success" disabled>
+                <span class="icon">⚡</span>
+                Đồng bộ
+            </button>
+        </div>
+
+        <div id="statusSection" class="status-section" style="display: none;">
+            <h3>Kết quả phân tích:</h3>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Tổng Caption:</span>
+                    <span id="totalCaptions" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Tổng Ảnh:</span>
+                    <span id="totalImages" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Có thể đồng bộ:</span>
+                    <span id="matchedPairs" class="stat-value success">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Không match:</span>
+                    <span id="unmatchedItems" class="stat-value warning">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="matchingResults" class="matching-results" style="display: none;">
+            <h3>Chi tiết matching:</h3>
+            <div id="matchList" class="match-list"></div>
+        </div>
+
+        <div id="logSection" class="log-section">
+            <h3>Log:</h3>
+            <div id="logContent" class="log-content"></div>
+        </div>
+    </div>
+
+    <script src="./lib/CSInterface.js"></script>
+    <script src="./main.js"></script>
+</body>
+</html>

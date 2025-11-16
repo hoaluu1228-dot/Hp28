@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Build artifacts
+*.zxp
+*.ccx
+
+# Editor directories
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*~

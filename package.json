@@ -1,0 +1,23 @@
+{
+  "name": "image-caption-sync",
+  "version": "1.0.0",
+  "description": "CEP Extension for Adobe Premiere Pro to sync images and captions based on number matching",
+  "main": "client/main.js",
+  "author": "HP28",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hoaluu1228-dot/Hp28.git"
+  },
+  "keywords": [
+    "adobe",
+    "premiere-pro",
+    "cep",
+    "extension",
+    "caption",
+    "sync"
+  ],
+  "engines": {
+    "premiere-pro": ">=13.0.0"
+  }
+}
