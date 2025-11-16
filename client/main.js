@@ -1,4 +1,7 @@
-// UXP Script for Premiere Pro - Image Caption Sync
+/* global CSInterface */
+
+// Initialize CEP interface
+const csInterface = new CSInterface();
 
 // DOM elements
 let analyzeBtn, syncBtn, logContent;
@@ -138,121 +141,46 @@ function matchCaptionsWithImages(captions, images) {
     };
 }
 
-/**
- * Get timeline data from Premiere Pro
- */
-async function getTimelineData() {
-    try {
-        const app = window.require('premierepro');
-
-        if (!app || !app.project) {
-            throw new Error('Không thể truy cập Premiere Pro API');
-        }
-
-        const activeSequence = app.project.activeSequence;
-
-        if (!activeSequence) {
-            throw new Error('Không có sequence nào đang được mở. Vui lòng mở một sequence.');
-        }
-
-        const captions = [];
-        const images = [];
-
-        // Get all video tracks
-        const videoTracks = activeSequence.videoTracks;
-
-        for (let trackIndex = 0; trackIndex < videoTracks.numTracks; trackIndex++) {
-            const track = videoTracks[trackIndex];
-            const clips = track.clips;
-
-            for (let clipIndex = 0; clipIndex < clips.numItems; clipIndex++) {
-                const clip = clips[clipIndex];
-                const clipName = clip.name;
-
-                // Get project item
-                const projectItem = clip.projectItem;
-                if (!projectItem) continue;
-
-                // Get timing info
-                const startTime = clip.start.seconds;
-                const endTime = clip.end.seconds;
-
-                // Generate unique ID for clip
-                const clipId = `${trackIndex}_${clipIndex}_${clipName}_${startTime}`;
-
-                // Determine if it's a caption or image based on name pattern
-                const isCaptionByName = /^\d+\./.test(clipName);
-
-                // Check if it's an image file
-                const mediaPath = projectItem.getMediaPath ? projectItem.getMediaPath() : '';
-                const isImage = /\.(png|jpg|jpeg|bmp|tiff|gif|psd)$/i.test(mediaPath) ||
-                               /\.(png|jpg|jpeg|bmp|tiff|gif|psd)$/i.test(clipName);
-
-                const clipData = {
-                    id: clipId,
-                    name: clipName,
-                    trackIndex: trackIndex,
-                    clipIndex: clipIndex,
-                    startTime: startTime,
-                    endTime: endTime,
-                    duration: endTime - startTime,
-                    clip: clip // Store reference to actual clip
-                };
-
-                if (isCaptionByName) {
-                    captions.push(clipData);
-                } else if (isImage) {
-                    images.push(clipData);
-                }
-            }
-        }
-
-        return {
-            captions,
-            images,
-            sequenceName: activeSequence.name
-        };
-
-    } catch (error) {
-        throw error;
-    }
-}
-
-/**
- * Analyze timeline
- */
-async function analyzeTimeline() {
+function analyzeTimeline() {
     log('Đang phân tích timeline...', 'info');
     analyzeBtn.disabled = true;
 
-    try {
-        const data = await getTimelineData();
+    // Call ExtendScript to get timeline data
+    csInterface.evalScript('getTimelineData()', function(result) {
+        try {
+            const data = JSON.parse(result);
 
-        log(`Tìm thấy ${data.captions.length} caption và ${data.images.length} ảnh`, 'success');
+            if (data.error) {
+                log(`Lỗi: ${data.error}`, 'error');
+                analyzeBtn.disabled = false;
+                return;
+            }
 
-        // Match captions with images
-        const matchResult = matchCaptionsWithImages(data.captions, data.images);
+            log(`Tìm thấy ${data.captions.length} caption và ${data.images.length} ảnh`, 'success');
 
-        // Store for later use
-        analysisData = {
-            ...data,
-            matchResult
-        };
+            // Match captions with images
+            const matchResult = matchCaptionsWithImages(data.captions, data.images);
 
-        // Update UI
-        displayAnalysisResults(matchResult, data.captions.length, data.images.length);
+            // Store for later use
+            analysisData = {
+                ...data,
+                matchResult
+            };
 
-        // Enable sync button if there are matches
-        syncBtn.disabled = matchResult.matches.length === 0;
+            // Update UI
+            displayAnalysisResults(matchResult, data.captions.length, data.images.length);
 
-        log(`Phân tích hoàn tất: ${matchResult.matches.length} cặp có thể đồng bộ`, 'success');
+            // Enable sync button if there are matches
+            syncBtn.disabled = matchResult.matches.length === 0;
 
-    } catch (error) {
-        log(`Lỗi: ${error.message}`, 'error');
-        console.error(error);
-    }
+            log(`Phân tích hoàn tất: ${matchResult.matches.length} cặp có thể đồng bộ`, 'success');
 
-    analyzeBtn.disabled = false;
+        } catch (error) {
+            log(`Lỗi parse dữ liệu: ${error.message}`, 'error');
+        }
+
+        analyzeBtn.disabled = false;
+    });
 }
 
 function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount) {
@@ -295,11 +223,7 @@ function displayAnalysisResults(matchResult, totalCaptionCount, totalImageCount)
     matchingResults.style.display = 'block';
 }
 
-/**
- * Sync timeline - match image timing exactly with caption
- * Logic: Image và Caption có cùng start/end time (khác track)
- */
-async function syncTimeline() {
+function syncTimeline() {
     if (!analysisData || !analysisData.matchResult) {
         log('Chưa có dữ liệu phân tích. Vui lòng nhấn "Phân tích Timeline" trước.', 'error');
         return;
@@ -315,52 +239,36 @@ async function syncTimeline() {
     log('Logic: Ảnh sẽ có cùng thời gian với Caption (ở track phía dưới)', 'info');
     syncBtn.disabled = true;
 
-    try {
-        // Sort matches by caption number to maintain order
-        const sortedMatches = matches.sort((a, b) => {
-            const numA = parseInt(extractCaptionNumber(a.caption.name));
-            const numB = parseInt(extractCaptionNumber(b.caption.name));
-            return numA - numB;
-        });
+    // Prepare data for ExtendScript
+    const syncData = matches.map(match => ({
+        captionId: match.caption.id,
+        imageId: match.image.id,
+        captionStartTime: match.caption.startTime,
+        captionEndTime: match.caption.endTime
+    }));
 
-        let syncedCount = 0;
+    // Call ExtendScript to perform sync
+    csInterface.evalScript(`syncClips(${JSON.stringify(syncData)})`, function(result) {
+        try {
+            const response = JSON.parse(result);
 
-        for (const match of sortedMatches) {
-            try {
-                const captionClip = match.caption.clip;
-                const imageClip = match.image.clip;
+            if (response.error) {
+                log(`Lỗi đồng bộ: ${response.error}`, 'error');
+            } else {
+                log(`Hoàn thành! Đã đồng bộ ${response.synced}/${matches.length} cặp với cùng thời gian`, 'success');
 
-                // Get caption timing
-                const captionStartTime = captionClip.start.seconds;
-                const captionEndTime = captionClip.end.seconds;
+                // Reset analysis data
+                analysisData = null;
+                syncBtn.disabled = true;
 
-                // Sync image to match caption timing exactly
-                imageClip.start.seconds = captionStartTime;
-                imageClip.end.seconds = captionEndTime;
-
-                syncedCount++;
-
-                log(`✓ ${match.caption.name} ↔ ${match.image.name} ([${captionStartTime.toFixed(2)}s - ${captionEndTime.toFixed(2)}s])`, 'success');
-
-            } catch (error) {
-                log(`✗ Lỗi đồng bộ ${match.caption.name} - ${match.image.name}: ${error.message}`, 'error');
+                // Clear display
+                statusSection.style.display = 'none';
+                matchingResults.style.display = 'none';
             }
+        } catch (error) {
+            log(`Lỗi xử lý kết quả: ${error.message}`, 'error');
         }
 
-        log(`Hoàn thành! Đã đồng bộ ${syncedCount}/${matches.length} cặp với cùng thời gian`, 'success');
-
-        // Reset analysis data
-        analysisData = null;
-        syncBtn.disabled = true;
-
-        // Clear display
-        statusSection.style.display = 'none';
-        matchingResults.style.display = 'none';
-
-    } catch (error) {
-        log(`Lỗi đồng bộ: ${error.message}`, 'error');
-        console.error(error);
-    }
-
-    syncBtn.disabled = false;
+        syncBtn.disabled = false;
+    });
 }

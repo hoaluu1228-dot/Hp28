@@ -1,6 +1,6 @@
-# Image Caption Sync - Premiere Pro UXP Extension
+# Image Caption Sync - Premiere Pro CEP Extension
 
-Extension UXP cho Adobe Premiere Pro để tự động đồng bộ hóa thời gian của ảnh và caption dựa trên số trong tên file.
+Extension CEP cho Adobe Premiere Pro để tự động đồng bộ hóa thời gian của ảnh và caption dựa trên số trong tên file.
 
 ## Tính năng
 
@@ -8,7 +8,7 @@ Extension UXP cho Adobe Premiere Pro để tự động đồng bộ hóa thời
 - 🎯 **Matching thông minh**: Đồng bộ dựa trên số cuối trong caption và tên ảnh
 - ⚡ **Đồng bộ tự động**: Tự động điều chỉnh thời gian của ảnh để khớp với caption
 - 📊 **Báo cáo chi tiết**: Hiển thị số lượng cặp matched và unmatched
-- 🎨 **UXP Modern**: Sử dụng UXP platform mới nhất của Adobe
+- 🎨 **UI hiện đại**: Dark theme với gradient buttons
 
 ## Quy tắc matching và đồng bộ
 
@@ -58,69 +58,56 @@ Track 2 - Images (đã sync):
 
 ## Yêu cầu hệ thống
 
-- **Adobe Premiere Pro CC 2022 trở lên** (version 22.0.0+)
+- **Adobe Premiere Pro CC 2018 trở lên** (bao gồm 2025)
 - Windows 10/11 hoặc macOS 10.15+
-- UXP Developer Tool (cho development)
 
 ## Cài đặt
 
-### Phương pháp 1: Sử dụng UXP Developer Tool (Recommended cho Development)
-
-1. **Tải UXP Developer Tool**:
-   - Tải từ: https://developer.adobe.com/photoshop/uxp/devtool/
-   - Cài đặt UDT trên máy tính
-
-2. **Load Extension**:
-   - Mở UXP Developer Tool
-   - Click "Add Plugin"
-   - Chọn thư mục chứa `manifest.json` của extension này
-   - Click "Load"
-   - Extension sẽ xuất hiện trong Premiere Pro
-
-### Phương pháp 2: Cài đặt trực tiếp (Production)
+### Bước 1: Copy extension vào thư mục CEP
 
 #### Windows:
 ```
-C:\Program Files\Common Files\Adobe\UXP\PluginsStorage\PPRO\<version>\External\
+C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\ImageCaptionSync\
 ```
 
 #### macOS:
 ```
-/Library/Application Support/Adobe/UXP/PluginsStorage/PPRO/<version>/External/
+/Library/Application Support/Adobe/CEP/extensions/ImageCaptionSync/
 ```
 
-Copy toàn bộ thư mục extension vào đây và restart Premiere Pro.
+Copy toàn bộ nội dung của thư mục này vào thư mục `ImageCaptionSync`.
 
-### Phương pháp 3: Package thành .ccx (Distribution)
+### Bước 2: Enable debug mode
 
-**CCX** (Creative Cloud Extension) là file package để distribute UXP extension.
+Để chạy extension không được ký, bạn cần enable debug mode:
 
-#### Tạo file CCX:
+#### Windows:
+1. Mở Registry Editor (`regedit`)
+2. Tạo key mới tại: `HKEY_CURRENT_USER\Software\Adobe\CSXS.11`
+3. Tạo String Value tên `PlayerDebugMode` với giá trị `1`
 
-1. Mở UXP Developer Tool
-2. Load extension như Phương pháp 1
-3. Click nút **"..."** (More Actions) bên cạnh extension
-4. Chọn **"Package"**
-5. Chọn thư mục output
-6. UDT sẽ tạo file `.ccx`
+#### macOS:
+Mở Terminal và chạy:
+```bash
+defaults write com.adobe.CSXS.11 PlayerDebugMode 1
+```
 
-#### Cài đặt từ file CCX:
+**Lưu ý**: Số phiên bản (11) có thể khác nhau tùy thuộc vào phiên bản Premiere Pro:
+- CC 2018: CSXS.8
+- CC 2019-2020: CSXS.9
+- CC 2021: CSXS.10
+- CC 2022-2025: CSXS.11
 
-**Cách 1: Double-click (Recommended)**
-- Windows/macOS: Double-click file `.ccx`
-- Hệ thống sẽ tự động mở Adobe Extension Manager
-- Follow hướng dẫn để cài đặt
+### Bước 3: Khởi động lại Premiere Pro
 
-**Cách 2: Adobe Creative Cloud Desktop**
-- Mở Creative Cloud Desktop App
-- Vào tab "Stock & Marketplace" > "Manage"
-- Kéo thả file `.ccx` vào
-- Extension sẽ được cài đặt tự động
+Sau khi cài đặt, khởi động lại Premiere Pro.
 
-**Lưu ý:**
-- File CCX có thể share cho người khác
-- Không cần UXP Developer Tool để cài đặt CCX
-- CCX phù hợp cho end-users
+### Bước 4: Mở Extension
+
+Trong Premiere Pro, vào menu:
+```
+Window > Extensions > Image Caption Sync
+```
 
 ## Sử dụng
 
@@ -149,70 +136,43 @@ Copy toàn bộ thư mục extension vào đây và restart Premiere Pro.
 
 ```
 ImageCaptionSync/
-├── manifest.json         # UXP manifest configuration
-├── index.html           # Panel UI
-├── styles.css           # Modern dark theme styling
-├── index.js             # Main logic with UXP APIs
-├── icons/               # Extension icons
-├── package.json         # Project metadata
-├── README.md
-└── INSTALL.md
+├── CSXS/
+│   └── manifest.xml          # Manifest cho CEP extension
+├── client/
+│   ├── index.html            # Giao diện UI
+│   ├── styles.css            # Styling
+│   ├── main.js               # Logic client-side
+│   └── lib/
+│       └── CSInterface.js    # Thư viện CEP
+├── host/
+│   └── index.jsx             # ExtendScript cho Premiere Pro
+├── .debug                    # Debug configuration
+├── package.json
+└── README.md
 ```
-
-## Development
-
-### Debug Extension
-
-1. Load extension qua UXP Developer Tool
-2. Click "Debug" trong UDT
-3. Chrome DevTools sẽ mở
-4. Kiểm tra Console để debug
-
-### Rebuild sau khi chỉnh sửa
-
-1. Trong UDT, click "Reload"
-2. Extension sẽ reload với code mới
-3. Không cần restart Premiere Pro
 
 ## Troubleshooting
 
 ### Extension không xuất hiện trong menu
 
-1. Kiểm tra Premiere Pro version >= 22.0.0
-2. Reload extension trong UXP Developer Tool
-3. Restart Premiere Pro
+1. Kiểm tra xem extension đã được copy đúng thư mục chưa
+2. Đảm bảo debug mode đã được enable
+3. Khởi động lại Premiere Pro
+4. Kiểm tra phiên bản CSXS trong registry/defaults
 
-### Lỗi khi phân tích timeline
+### Extension bị lỗi khi chạy
 
-1. Đảm bảo có sequence đang mở
-2. Kiểm tra Console trong DevTools
-3. Đảm bảo clips có tên đúng format
+1. Mở Chrome DevTools để debug:
+   - Windows/Linux: Right-click extension panel → Inspect
+   - macOS: Cmd+Opt+I
+2. Kiểm tra Console để xem lỗi
+3. Đảm bảo sequence đang được mở trong Premiere Pro
 
 ### Caption hoặc ảnh không được phát hiện
 
-1. Caption phải bắt đầu bằng số và dấu chấm (vd: `002.`)
-2. Ảnh phải có extension hợp lệ (.png, .jpg, .jpeg, etc.)
-3. Clips phải nằm trên video track
-
-## API Reference
-
-Extension sử dụng các UXP APIs sau:
-
-- `window.require('premierepro')` - Truy cập Premiere Pro API
-- `app.project.activeSequence` - Lấy sequence đang active
-- `sequence.videoTracks` - Truy cập video tracks
-- `clip.start.seconds` / `clip.end.seconds` - Thao tác với timing
-
-## Khác biệt so với CEP
-
-| Feature | CEP | UXP |
-|---------|-----|-----|
-| Platform | Legacy | Modern |
-| JavaScript | ES5 + ExtendScript | Modern ES6+ |
-| API Access | CEPEngine bridge | Direct API access |
-| Min Premiere Version | 2018+ | 2022+ |
-| Development Tool | ExtendScript Toolkit | UXP Developer Tool |
-| Performance | Slower | Faster |
+1. Kiểm tra format tên caption: phải có số và dấu chấm ở đầu
+2. Kiểm tra tên ảnh có số ở cuối không
+3. Đảm bảo clips nằm trên video track (không phải audio track)
 
 ## License
 
@@ -225,8 +185,8 @@ MIT License
 ## Changelog
 
 ### Version 1.0.0 (2025-11-16)
-- Migrated từ CEP sang UXP platform
-- Support Premiere Pro CC 2022+
-- Sử dụng modern JavaScript APIs
-- Cải thiện performance
-- UI hiện đại với dark theme
+- Phiên bản CEP cho Premiere Pro 2018-2025
+- Support tất cả versions kể cả Premiere Pro 2025
+- Tính năng phân tích timeline
+- Tính năng matching và đồng bộ
+- Giao diện UI hoàn chỉnh
